@@ -32,7 +32,7 @@ Credentials to access database and YandexGPT API in a form of JSON file:
 
 ## Manual
 
-Build an image to eun all services, image is based on image for Data Science environment at the platform [GSOM JupyterHub](https://github.com/vgarshin/gsom_jhub_deploy). Command to build:
+Build an image to run all services, image is based on image for Data Science environment at the platform [GSOM JupyterHub](https://github.com/vgarshin/gsom_jhub_deploy). Command to build:
 
 ```bash
 sudo docker build -t mibadsaitel dockerfiledsaitel
