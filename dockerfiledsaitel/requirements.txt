@@ -1,0 +1,10 @@
+opensearch-py
+pdf2image
+PyJWT
+langchain
+sentence_transformers
+InstructorEmbedding
+unstructured
+unstructured[docx]
+streamlit
+flask
