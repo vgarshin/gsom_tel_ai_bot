@@ -13,7 +13,7 @@ Run a simple AI bot for Teaching Essentials course based on YandexGPT LLM and Op
 
 Data on Teaching Essentials course unpacked to `Teaching essentials` at the server side.
 
-[Yandex Managed Service for OpenSearch](https://cloud.yandex.com/en/docs/managed-opensearch/) instance as a database. 
+[Yandex Managed Service for OpenSearch](https://cloud.yandex.com/en/docs/managed-opensearch/) instance as a database. [Virtual machine](https://cloud.yandex.com/en/docs/compute/quickstart/) with Docker installed.
 
 Credentials to access database and YandexGPT API in a form of JSON file:
 
