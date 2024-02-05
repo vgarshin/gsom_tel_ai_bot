@@ -52,3 +52,9 @@ Run service for AI course home assignment validator:
 sudo docker run -d -v /home/teluser/aibot:/home/jovyan/ -p 40001:40001 -it mibadsaitel python aichecker.py
 sudo docker run -d -v /home/teluser/aibot:/home/jovyan/ -p 30001:30001 -it mibadsaitel streamlit run aibotchecker.py --server.port 30001 --browser.gatherUsageStats False
 ```
+
+...or use `docker compose` to run all applications at once:
+
+```bash
+docker compose up
+```
