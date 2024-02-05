@@ -5,7 +5,7 @@ import streamlit as st
 
 HEADER = {'Content-type': 'application/json'}
 PORT = 40000
-URL_SERVER = 'http://158.160.123.124:{}/ask'.format(
+URL_SERVER = 'http://158.160.119.211:{}/ask'.format(
     PORT
 )
 

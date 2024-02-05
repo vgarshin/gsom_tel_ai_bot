@@ -35,6 +35,7 @@ service_account_id = creds['service_account_id']
 key_id = creds['key_id']
 private_key = creds['private_key']
 source_dir = './Teaching essentials'
+#source_dir = './course_te'
 
 def start():
     conn = OpenSearch(

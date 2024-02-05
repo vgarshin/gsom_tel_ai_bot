@@ -1,0 +1,34 @@
+version: '0'
+services:
+  server_hlp:
+    build: dockerfiledsaitel/
+    command: python aihelper.py
+    ports:
+      - 40000:40000
+    volumes:
+      - /home/teluser/aibot:/home/jovyan/
+  server_chk:
+    build: dockerfiledsaitel/
+    command: python aichecker.py
+    ports:
+      - 40001:40001
+    volumes:
+      - /home/teluser/aibot:/home/jovyan/
+  client_hlp:
+    build: dockerfiledsaitel/
+    command: streamlit run aibothelper.py --server.port 30000 --browser.gatherUsageStats False
+    ports:
+      - 30000:30000
+    depends_on:
+      - server_hlp
+    volumes:
+      - /home/teluser/aibot:/home/jovyan/
+  client_chk:
+    build: dockerfiledsaitel/
+    command: streamlit run aibotchecker.py --server.port 30001 --browser.gatherUsageStats False
+    ports:
+      - 30001:30001
+    depends_on:
+      - server_chk
+    volumes:
+      - /home/teluser/aibot:/home/jovyan/
