@@ -7,7 +7,7 @@ Run a simple AI bot for an educational course based on YandexGPT LLM and OpenSea
 
 ## Tools
 
-[LangChain] (https://python.langchain.com) framework to operate with the data and run chat-bot, [Streamlit](https://streamlit.io/) for the interface of the application, [Flask](https://flask-docs.readthedocs.io/en/latest/) for the backend, [Docker](https://www.docker.com/) to run a services.
+[LangChain](https://python.langchain.com) framework to operate with the data and run chat-bot, [Streamlit](https://streamlit.io/) for the interface of the application, [Flask](https://flask-docs.readthedocs.io/en/latest/) for the backend, [Docker](https://www.docker.com/) to run a services.
 
 ## Prerequisites
 
