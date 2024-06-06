@@ -1,4 +1,4 @@
-# GSOM TEL YaGPT bot for Teaching essentials course
+# GSOM TEL YaGPT bot for an educational course
 Experimental AI bot based on [Yandex repository for Retrieval-Augmented Generation](https://github.com/yandex-cloud-examples/yc-yandexgpt-qa-bot-for-docs) with help of Yandex.Cloud services.
 
 ## Goal
