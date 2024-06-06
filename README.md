@@ -3,7 +3,7 @@ Experimental AI bot based on [Yandex repository for Retrieval-Augmented Generati
 
 ## Goal
 
-Run a simple AI bot for Teaching Essentials course based on YandexGPT LLM and OpenSearch database to store context in a vector form (embeddings).
+Run a simple AI bot for an educational course based on YandexGPT LLM and OpenSearch database to store context in a vector form (embeddings).
 
 ## Tools
 
