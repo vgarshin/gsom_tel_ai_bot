@@ -196,7 +196,7 @@ def resp(code, data):
     return Response(status=code, mimetype='application/json', response=json.dumps(data))
 
 
-def theme_validate(fields, chk_str=True):
+def theme_validate(fields):
     errors = []
     jsn = request.get_json()
     if jsn is None:
