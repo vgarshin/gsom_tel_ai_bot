@@ -106,14 +106,14 @@ if instructions:
             if 'messages' not in st.session_state:
                 st.session_state.messages = []
             for message in st.session_state.messages:
-                with st.chat_message(message["role"]):
-                    st.markdown(message["content"])
-            if query := st.chat_input("What is up?"):
-                st.chat_message("user").markdown(query)
+                with st.chat_message(message['role']):
+                    st.markdown(message['content'])
+            if query := st.chat_input('Введите ваше сообщение'):
+                st.chat_message('user').markdown(query)
                 st.session_state.messages.append(
                     {
-                        "role": "user",
-                        "content": query
+                        'role': 'user',
+                        'content': query
                     }
                 )
                 data = {'query': query}
@@ -124,11 +124,13 @@ if instructions:
                     verify=True
                 )
                 response = r.json()['answer']
-                with st.chat_message("assistant"):
+                with st.chat_message('assistant'):
                     st.markdown(response)
                 st.session_state.messages.append(
                     {
-                        "role": "assistant",
-                        "content": response
+                        'role': 'assistant',
+                        'content': response
                     }
                 )
+        else:
+            st.write(f'Server error, response: {r.text}')

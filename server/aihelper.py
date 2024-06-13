@@ -7,6 +7,7 @@ import json
 import time
 import logging
 import requests
+import datetime
 from opensearchpy import OpenSearch
 import langchain
 from langchain.text_splitter import RecursiveCharacterTextSplitter
@@ -50,19 +51,24 @@ class BotChain():
                  chunk_size, chunk_overlap, 
                  db_hosts, db_user, db_pass, ca_path, bulk_size,
                  folder_id):
-        self.token = self.ya_token(
-            llm_service_account_id, 
-            llm_private_key, 
-            llm_key_id,
-            lag=3600
-        )
-        self.docsearch = self.db_docsearch(
-            bucket, s3_key_id, s3_secret_key, s3_endpoint_url,
-            chunk_size, chunk_overlap, 
-            db_hosts, db_user, db_pass, ca_path, bulk_size,
-            folder_id
-        )
+        self.llm_service_account_id = llm_service_account_id
+        self.llm_private_key = llm_private_key
+        self.llm_key_id = llm_key_id
+        self.bucket = bucket
+        self.s3_key_id = s3_key_id
+        self.s3_secret_key = s3_secret_key
+        self.s3_endpoint_url = s3_endpoint_url
+        self.chunk_size = chunk_size
+        self.chunk_overlap = chunk_overlap
+        self.db_hosts = db_hosts
+        self.db_user = db_user
+        self.db_pass = db_pass
+        self.ca_path = ca_path
+        self.bulk_size = bulk_size
         self.folder_id = folder_id
+        self.token = self.ya_token(lag=360)
+        self.embeddings = self.ya_embed()
+        self.docsearch = self.db_docsearch()
 
     def db_connect(self, db_hosts, db_user, db_pass, ca_path):
         conn = OpenSearch(
@@ -75,66 +81,83 @@ class BotChain():
         print('connection:', conn.info())
         return conn
 
-    def ya_token(self, llm_service_account_id, llm_private_key, llm_key_id, lag):
+    def ya_token(self, lag):
         now = int(time.time())
         payload = {
             'aud': 'https://iam.api.cloud.yandex.net/iam/v1/tokens',
-            'iss': llm_service_account_id,
+            'iss': self.llm_service_account_id,
             'iat': now,
             'exp': now + lag
         }
         encoded_token = jwt.encode(
             payload,
-            llm_private_key,
+            self.llm_private_key,
             algorithm='PS256',
-            headers={'kid': llm_key_id}
+            headers={'kid': self.llm_key_id}
         )
         url = 'https://iam.api.cloud.yandex.net/iam/v1/tokens'
-        r = requests.post(
+        token = requests.post(
             url,  
             headers={'Content-Type': 'application/json'},
             json={'jwt': encoded_token}
         ).json()
-        token = r['iamToken']
         return token
+    
+    def ya_embed(self):
+        embeddings = YandexGPTEmbeddings(
+            iam_token=self.token['iamToken'], 
+            folder_id=self.folder_id
+        )
+        return embeddings
 
-    def db_docsearch(self, bucket, s3_key_id, s3_secret_key, s3_endpoint_url,
-                     chunk_size, chunk_overlap, 
-                     db_hosts, db_user, db_pass, ca_path, bulk_size, 
-                     folder_id):
+    def db_docsearch(self):
         loader = S3DirectoryLoader(
-            S3_BUCKET, 
-            aws_access_key_id=s3_key_id, 
-            aws_secret_access_key=s3_secret_key,
-            endpoint_url=s3_endpoint_url
+            self.bucket, 
+            aws_access_key_id=self.s3_key_id, 
+            aws_secret_access_key=self.s3_secret_key,
+            endpoint_url=self.s3_endpoint_url
         )
         documents = loader.load()
         text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=chunk_size, 
-            chunk_overlap=chunk_overlap
+            chunk_size=self.chunk_size, 
+            chunk_overlap=self.chunk_overlap
         )
         docs = text_splitter.split_documents(documents)
-        embeddings = YandexGPTEmbeddings(iam_token=self.token, folder_id=folder_id)
         docsearch = OpenSearchVectorSearch.from_documents(
             docs,
-            embeddings,
-            opensearch_url=db_hosts[0],
-            http_auth=(db_user, db_pass),
+            self.embeddings,
+            opensearch_url=self.db_hosts[0],
+            http_auth=(self.db_user, self.db_pass),
             use_ssl=True,
             verify_certs=True,
-            ca_certs=ca_path,
+            ca_certs=self.ca_path,
             engine='lucene',
-            bulk_size=bulk_size
+            bulk_size=self.bulk_size
         )
         return docsearch
 
+    def refresh_token(self, gap=3600):
+        now_dt = datetime.datetime.fromtimestamp(time.time())
+        exp_dt = datetime.datetime.strptime(
+            self.token['expiresAt'].split('.')[0], 
+            '%Y-%m-%dT%H:%M:%S'
+        )
+        refresh_flag = (exp_dt - now_dt) < datetime.timedelta(seconds=gap)
+        if refresh_flag:
+            self.token = self.ya_token(lag=360)
+            self.embeddings = self.ya_embed()
+            self.docsearch = self.db_docsearch()
+        return refresh_flag
+
     def db_simularity_search(self, query, k=2):
+        self.refresh_token()
         query_docs = self.docsearch.similarity_search(query, k=k)
         return query_docs
-        
+
     def ya_chain(self, temperature, instructions):
+        self.refresh_token()
         llm = YandexLLM(
-            iam_token=self.token,
+            iam_token=self.token['iamToken'],
             folder_id=self.folder_id,
             temperature=temperature,
             instruction_text=instructions
@@ -253,8 +276,9 @@ def init_chain():
     temperature = jsn['temperature']
     global CHAIN
     CHAIN = BOTCHAIN.ya_chain(temperature, instructions)
-    msg = 'Chain for instructions -{}- done'.format(
-        instructions.replace('\n', '').replace('\t', '')
+    msg = 'Chain for instructions -{}- done, token expires at {}'.format(
+        instructions.replace('\n', '').replace('\t', ''),
+        BOTCHAIN.token['expiresAt'].split('.')[0].replace('T', ' ')
     )
     LOGGER.info(msg)
     return resp(200, {'result' : msg})
@@ -269,9 +293,10 @@ def search_db():
     query, k = jsn['query'], jsn['k']
     global DOCS
     DOCS = BOTCHAIN.db_simularity_search(query=query, k=k)
-    msg = 'Search for query -{}- done, k = {}'.format(
+    msg = 'Search for query -{}- done, k = {}, token expires at {}'.format(
         query,
-        k
+        k,
+        BOTCHAIN.token['expiresAt'].split('.')[0].replace('T', ' ')
     )
     LOGGER.info(msg)
     return resp(200, {'result' : msg})
