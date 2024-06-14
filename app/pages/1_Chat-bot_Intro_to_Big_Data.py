@@ -29,7 +29,7 @@ course_info = r.json()['data']
 
 st.set_page_config(
     page_title='Курс по большим данным',
-    page_icon=':bar_chart:'
+    page_icon=':speech_balloon:'
 )
 st.sidebar.header('Чат-бот для курса по большим данным')
 st.header('AI-бот для курса "Введение в технологии больших данных"', divider='rainbow')
@@ -133,4 +133,7 @@ if instructions:
                     }
                 )
         else:
-            st.write(f'Server error, response: {r.text}')
+            sst.error(
+                'Ошибка запуска ассистента, попробуйте поменять параметры', 
+                icon=':warning:'
+            )
